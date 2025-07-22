@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marketing Material Tracker & Database System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .tab-button.active { 
+            background-color: #3b82f6; 
+            color: white; 
+            border-bottom-color: transparent;
+        }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-lg border-b-4 border-blue-500">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="flex items-center justify-between flex-wrap">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">Marketing Material Tracker</h1>
+                    <p class="text-gray-600 mt-1">Centralized system for tracking customer marketing materials</p>
+                </div>
+                <div class="flex items-center space-x-4 mt-4 sm:mt-0">
+                    <span id="db-status" class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-medium">
+                        Connecting...
+                    </span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div class="bg-white rounded-lg shadow-md mb-6">
+            <div class="flex border-b flex-wrap">
+                <button class="tab-button active px-6 py-3 font-medium text-gray-700 border-b-2 border-transparent hover:text-blue-600 transition-colors" onclick="showTab('form')">
+                    📝 New Entry
+                </button>
+                <button class="tab-button px-6 py-3 font-medium text-gray-700 border-b-2 border-transparent hover:text-blue-600 transition-colors" onclick="showTab('database')">
+                    📊 Database
+                </button>
+                <button class="tab-button px-6 py-3 font-medium text-gray-700 border-b-2 border-transparent hover:text-blue-600 transition-colors" onclick="showTab('analytics')">
+                    📈 Analytics
+                </button>
+            </div>
+        </div>
+
+        <!-- Form Tab -->
+        <div id="form" class="tab-content active">
+            <div class="bg-white rounded-lg shadow-lg p-8">
+                <h2 id="form-title" class="text-2xl font-bold text-gray-900 mb-6">Marketing Material Distribution Entry</h2>
+                
+                <form id="materialForm" class="space-y-6">
+                    <input type="hidden" id="entryId">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="date" class="block text-sm font-medium text-gray-700 mb-2">Distribution Date *</label>
+                            <input type="date" id="date" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label for="customerName" class="block text-sm font-medium text-gray-700 mb-2">Customer Name *</label>
+                            <input type="text" id="customerName" required placeholder="Enter customer name" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label for="materialType" class="block text-sm font-medium text-gray-700 mb-2">Marketing Material *</label>
+                            <select id="materialType" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">Select material type</option>
+                                <option value="Flyers">Flyers</option><option value="T-shirts">T-shirts</option><option value="Banners">Banners</option><option value="Brochures">Brochures</option><option value="Business Cards">Business Cards</option><option value="Promotional Items">Promotional Items</option><option value="Digital Materials">Digital Materials</option><option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="quantity" class="block text-sm font-medium text-gray-700 mb-2">Quantity Distributed *</label>
+                            <input type="number" id="quantity" required min="1" placeholder="Enter quantity" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label for="cost" class="block text-sm font-medium text-gray-700 mb-2">Total Cost ($)</label>
+                            <input type="number" id="cost" step="0.01" min="0" placeholder="Enter total cost" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label for="customerType" class="block text-sm font-medium text-gray-700 mb-2">Customer Type *</label>
+                            <select id="customerType" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">Select customer type</option><option value="New">New</option><option value="Existing">Existing</option><option value="Prospect">Prospect</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="staff" class="block text-sm font-medium text-gray-700 mb-2">Staff Responsible *</label>
+                            <input type="text" id="staff" required placeholder="Enter staff name" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                    </div>
+                    <div class="flex justify-end space-x-4">
+                        <button type="button" onclick="resetForm()" class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">Clear Form</button>
+                        <button id="submitButton" type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">Submit Entry</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Database Tab -->
+        <div id="database" class="tab-content">
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                 <div class="flex justify-between items-center mb-6 flex-wrap">
+                    <h2 class="text-2xl font-bold text-gray-900">Marketing Materials Database</h2>
+                </div>
+                <div id="database-loader" class="loader"></div>
+                <div id="database-content" class="hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full border-collapse border border-gray-300">
+                            <thead class="bg-gray-100">
+                                <tr>
+                                    <th class="border border-gray-300 px-4 py-2 text-left font-medium text-gray-700">Date</th>
+                                    <th class="border border-gray-300 px-4 py-2 text-left font-medium text-gray-700">Customer</th>
+                                    <th class="border border-gray-300 px-4 py-2 text-left font-medium text-gray-700">Material</th>
+                                    <th class="border border-gray-300 px-4 py-2 text-left font-medium text-gray-700">Quantity</th>
+                                    <th class="border border-gray-300 px-4 py-2 text-left font-medium text-gray-700">Cost</th>
+                                    <th class="border border-gray-300 px-4 py-2 text-left font-medium text-gray-700">Type</th>
+                                    <th class="border border-gray-300 px-4 py-2 text-left font-medium text-gray-700">Staff</th>
+                                    <th class="border border-gray-300 px-4 py-2 text-left font-medium text-gray-700">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dataTable">
+                                <!-- Data will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                     <p id="no-data-message" class="text-center text-gray-500 py-8 hidden">No data found. Add an entry to get started!</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analytics Tab -->
+        <div id="analytics" class="tab-content">
+            <div id="analytics-loader" class="loader"></div>
+            <div id="analytics-content" class="hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                    <div class="bg-white rounded-lg shadow-lg p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Monthly Summary</h3>
+                        <div id="summary-cards" class="grid grid-cols-2 gap-4"></div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow-lg p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Customer Type Distribution</h3>
+                        <canvas id="customerTypeChart"></canvas>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-white rounded-lg shadow-lg p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Material Usage (by Quantity)</h3>
+                        <canvas id="materialChart"></canvas>
+                    </div>
+                    <div class="bg-white rounded-lg shadow-lg p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Monthly Spending Trends</h3>
+                        <canvas id="trendChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal -->
+    <div id="appModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-8 max-w-md mx-4 text-center">
+            <div id="modal-icon" class="text-6xl mb-4"></div>
+            <h3 id="modal-title" class="text-xl font-semibold text-gray-900 mb-2"></h3>
+            <p id="modal-message" class="text-gray-600 mb-6"></p>
+            <div id="modal-buttons"></div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Firebase Imports
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- CONFIGURATION ---
+        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'material-tracker-app';
+        
+        let db, auth, userId;
+        let allEntries = []; // Local cache of all entries
+        let customerTypeChart, materialChart, trendChart;
+
+        // --- INITIALIZATION ---
+        async function initializeFirebase() {
+            try {
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                setLogLevel('debug');
+
+                // This listener will trigger once after sign-in is complete.
+                onAuthStateChanged(auth, user => {
+                    if (user) {
+                        userId = user.uid;
+                        console.log("User is signed in with UID:", userId);
+                        updateDbStatus('✅ Connected', 'bg-green-100', 'text-green-800');
+                        loadEntries(); // Load data now that we are authenticated
+                    } else {
+                        console.log("User is not signed in.");
+                        updateDbStatus('⚪ Disconnected', 'bg-gray-100', 'text-gray-800');
+                    }
+                });
+
+                // Attempt to sign in using the appropriate method.
+                const authToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+                if (authToken) {
+                    console.log("Attempting to sign in with custom token...");
+                    await signInWithCustomToken(auth, authToken);
+                } else {
+                    console.log("Attempting to sign in anonymously...");
+                    await signInAnonymously(auth);
+                }
+            } catch (error) {
+                console.error("Firebase initialization or sign-in failed:", error);
+                updateDbStatus('❌ Auth Failed', 'bg-red-100', 'text-red-800');
+                showModal('error', 'Connection Error', 'Could not connect to the database. Please check your connection and refresh the page.');
+            }
+        }
+        
+        // --- DATA HANDLING ---
+        function loadEntries() {
+            const entriesCollection = collection(db, `artifacts/${appId}/public/data/entries`);
+            
+            onSnapshot(entriesCollection, (snapshot) => {
+                document.getElementById('database-loader').style.display = 'none';
+                document.getElementById('database-content').style.display = 'block';
+
+                allEntries = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                
+                // Sort by date descending
+                allEntries.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+                renderTable(allEntries);
+                updateAnalytics(allEntries);
+
+            }, (error) => {
+                console.error("Error fetching entries: ", error);
+                showModal('error', 'Error', 'Could not fetch data from the database.');
+            });
+        }
+
+        function renderTable(entries) {
+            const tableBody = document.getElementById('dataTable');
+            const noDataMessage = document.getElementById('no-data-message');
+            tableBody.innerHTML = '';
+
+            if(entries.length === 0) {
+                noDataMessage.style.display = 'block';
+                return;
+            }
+            noDataMessage.style.display = 'none';
+
+            const customerTypeClasses = {
+                'New': 'bg-green-100 text-green-800',
+                'Existing': 'bg-blue-100 text-blue-800',
+                'Prospect': 'bg-yellow-100 text-yellow-800'
+            };
+
+            entries.forEach(entry => {
+                const row = tableBody.insertRow();
+                row.className = 'hover:bg-gray-50';
+                row.innerHTML = `
+                    <td class="border border-gray-300 px-4 py-2">${entry.date || 'N/A'}</td>
+                    <td class="border border-gray-300 px-4 py-2">${entry.customerName || 'N/A'}</td>
+                    <td class="border border-gray-300 px-4 py-2">${entry.materialType || 'N/A'}</td>
+                    <td class="border border-gray-300 px-4 py-2">${entry.quantity || 'N/A'}</td>
+                    <td class="border border-gray-300 px-4 py-2">$${parseFloat(entry.cost || 0).toFixed(2)}</td>
+                    <td class="border border-gray-300 px-4 py-2">
+                        <span class="${customerTypeClasses[entry.customerType] || 'bg-gray-100 text-gray-800'} px-2 py-1 rounded-full text-xs font-medium">
+                            ${entry.customerType || 'N/A'}
+                        </span>
+                    </td>
+                    <td class="border border-gray-300 px-4 py-2">${entry.staff || 'N/A'}</td>
+                    <td class="border border-gray-300 px-4 py-2 whitespace-nowrap">
+                        <button class="text-blue-600 hover:text-blue-800 mr-2" onclick="window.handleEdit('${entry.id}')">Edit</button>
+                        <button class="text-red-600 hover:text-red-800" onclick="window.handleDelete('${entry.id}')">Delete</button>
+                    </td>
+                `;
+            });
+        }
+
+        // --- FORM ACTIONS ---
+        document.getElementById('materialForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const entryId = document.getElementById('entryId').value;
+            
+            const entryData = {
+                date: document.getElementById('date').value,
+                customerName: document.getElementById('customerName').value,
+                materialType: document.getElementById('materialType').value,
+                quantity: parseInt(document.getElementById('quantity').value, 10),
+                cost: parseFloat(document.getElementById('cost').value || 0),
+                customerType: document.getElementById('customerType').value,
+                staff: document.getElementById('staff').value,
+            };
+
+            try {
+                const entriesCollection = collection(db, `artifacts/${appId}/public/data/entries`);
+                if (entryId) {
+                    // Update existing entry
+                    const entryRef = doc(db, `artifacts/${appId}/public/data/entries`, entryId);
+                    await updateDoc(entryRef, entryData);
+                    showModal('success', 'Entry Updated!', 'The record has been successfully updated.');
+                } else {
+                    // Add new entry
+                    await addDoc(entriesCollection, entryData);
+                    showModal('success', 'Entry Submitted!', 'Your new entry has been saved to the database.');
+                }
+                resetForm();
+            } catch (error) {
+                console.error("Error saving entry: ", error);
+                showModal('error', 'Submission Failed', 'There was an error saving your entry. Please try again.');
+            }
+        });
+
+        window.handleEdit = (id) => {
+            const entry = allEntries.find(e => e.id === id);
+            if (!entry) return;
+
+            document.getElementById('entryId').value = entry.id;
+            document.getElementById('date').value = entry.date;
+            document.getElementById('customerName').value = entry.customerName;
+            document.getElementById('materialType').value = entry.materialType;
+            document.getElementById('quantity').value = entry.quantity;
+            document.getElementById('cost').value = entry.cost;
+            document.getElementById('customerType').value = entry.customerType;
+            document.getElementById('staff').value = entry.staff;
+
+            document.getElementById('form-title').innerText = 'Edit Distribution Entry';
+            document.getElementById('submitButton').innerText = 'Update Entry';
+            document.getElementById('submitButton').classList.replace('bg-blue-600', 'bg-green-600');
+            document.getElementById('submitButton').classList.replace('hover:bg-blue-700', 'hover:bg-green-700');
+
+            showTab('form');
+        };
+
+        window.handleDelete = (id) => {
+            showModal('confirm', 'Confirm Deletion', 'Are you sure you want to delete this entry? This action cannot be undone.', [
+                { text: 'Cancel', class: 'px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50', action: 'close' },
+                { text: 'Delete', class: 'px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700', action: async () => {
+                    try {
+                        const entryRef = doc(db, `artifacts/${appId}/public/data/entries`, id);
+                        await deleteDoc(entryRef);
+                        closeModal();
+                    } catch (error) {
+                        console.error("Error deleting document: ", error);
+                        showModal('error', 'Deletion Failed', 'Could not delete the entry. Please try again.');
+                    }
+                }}
+            ]);
+        };
+
+        window.resetForm = () => {
+            document.getElementById('materialForm').reset();
+            document.getElementById('entryId').value = '';
+            document.getElementById('form-title').innerText = 'Marketing Material Distribution Entry';
+            document.getElementById('submitButton').innerText = 'Submit Entry';
+            document.getElementById('submitButton').classList.replace('bg-green-600', 'bg-blue-600');
+            document.getElementById('submitButton').classList.replace('hover:bg-green-700', 'hover:bg-blue-700');
+            document.getElementById('date').valueAsDate = new Date();
+        };
+
+        // --- ANALYTICS ---
+        function updateAnalytics(entries) {
+            document.getElementById('analytics-loader').style.display = 'none';
+            document.getElementById('analytics-content').style.display = 'block';
+
+            if (!entries || entries.length === 0) {
+                 // Potentially show a "no data for analytics" message
+                return;
+            }
+
+            // 1. Summary Cards
+            const totalSpend = entries.reduce((sum, e) => sum + (e.cost || 0), 0);
+            const totalItems = entries.reduce((sum, e) => sum + (e.quantity || 0), 0);
+            const uniqueCustomers = new Set(entries.map(e => e.customerName)).size;
+            const uniqueMaterials = new Set(entries.map(e => e.materialType)).size;
+
+            document.getElementById('summary-cards').innerHTML = `
+                <div class="bg-blue-50 p-4 rounded-lg"><div class="text-2xl font-bold text-blue-600">$${totalSpend.toFixed(2)}</div><div class="text-sm text-gray-600">Total Spend</div></div>
+                <div class="bg-green-50 p-4 rounded-lg"><div class="text-2xl font-bold text-green-600">${totalItems}</div><div class="text-sm text-gray-600">Items Distributed</div></div>
+                <div class="bg-purple-50 p-4 rounded-lg"><div class="text-2xl font-bold text-purple-600">${uniqueCustomers}</div><div class="text-sm text-gray-600">Customers Reached</div></div>
+                <div class="bg-orange-50 p-4 rounded-lg"><div class="text-2xl font-bold text-orange-600">${uniqueMaterials}</div><div class="text-sm text-gray-600">Material Types</div></div>
+            `;
+
+            // 2. Customer Type Chart
+            const customerTypeData = entries.reduce((acc, e) => {
+                acc[e.customerType] = (acc[e.customerType] || 0) + 1;
+                return acc;
+            }, {});
+            updateDoughnutChart('customerTypeChart', customerTypeData, { 'New': '#10b981', 'Existing': '#3b82f6', 'Prospect': '#f59e0b' });
+            
+            // 3. Material Usage Chart
+            const materialData = entries.reduce((acc, e) => {
+                acc[e.materialType] = (acc[e.materialType] || 0) + (e.quantity || 0);
+                return acc;
+            }, {});
+            updateBarChart('materialChart', materialData, 'Quantity', '#3b82f6');
+            
+            // 4. Monthly Trend Chart
+            const trendData = entries.reduce((acc, e) => {
+                const month = new Date(e.date).toLocaleString('default', { month: 'short', year: '2-digit' });
+                acc[month] = (acc[month] || 0) + (e.cost || 0);
+                return acc;
+            }, {});
+            // A real app would sort these labels chronologically. For simplicity, we sort alphabetically.
+            const sortedTrendLabels = Object.keys(trendData).sort();
+            const sortedTrendData = sortedTrendLabels.map(label => trendData[label]);
+            updateLineChart('trendChart', sortedTrendLabels, sortedTrendData, 'Monthly Spend ($)');
+        }
+        
+        function updateDoughnutChart(canvasId, data, colors) {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            if (window[canvasId + '_chart']) window[canvasId + '_chart'].destroy();
+            window[canvasId + '_chart'] = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(data),
+                    datasets: [{ data: Object.values(data), backgroundColor: Object.values(colors) }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
+
+        function updateBarChart(canvasId, data, label, color) {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            if (window[canvasId + '_chart']) window[canvasId + '_chart'].destroy();
+            window[canvasId + '_chart'] = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(data),
+                    datasets: [{ label: label, data: Object.values(data), backgroundColor: color }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+            });
+        }
+
+        function updateLineChart(canvasId, labels, data, label) {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            if (window[canvasId + '_chart']) window[canvasId + '_chart'].destroy();
+            window[canvasId + '_chart'] = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{ label: label, data: data, borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', fill: true, tension: 0.1 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+            });
+        }
+
+        // --- UI & UTILITY FUNCTIONS ---
+        window.showTab = (tabName) => {
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+            document.getElementById(tabName).classList.add('active');
+            event.currentTarget.classList.add('active');
+            if (tabName === 'analytics') {
+                updateAnalytics(allEntries);
+            }
+        };
+
+        function updateDbStatus(text, bgColor, textColor) {
+            const statusEl = document.getElementById('db-status');
+            statusEl.textContent = text;
+            statusEl.className = `px-3 py-1 rounded-full text-sm font-medium ${bgColor} ${textColor}`;
+        }
+
+        function showModal(type, title, message, buttons = [{ text: 'Close', class: 'px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700', action: 'close' }]) {
+            const icons = {
+                success: '✅', error: '❌', confirm: '❓'
+            };
+            document.getElementById('modal-icon').innerText = icons[type] || '';
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-message').innerText = message;
+            
+            const buttonsContainer = document.getElementById('modal-buttons');
+            buttonsContainer.innerHTML = '';
+            buttons.forEach(btnInfo => {
+                const button = document.createElement('button');
+                button.innerText = btnInfo.text;
+                button.className = btnInfo.class + ' ml-2';
+                button.onclick = () => {
+                    if (typeof btnInfo.action === 'function') {
+                        btnInfo.action();
+                    } else if (btnInfo.action === 'close') {
+                        closeModal();
+                    }
+                };
+                buttonsContainer.appendChild(button);
+            });
+
+            document.getElementById('appModal').classList.remove('hidden');
+            document.getElementById('appModal').classList.add('flex');
+        }
+
+        window.closeModal = () => {
+            document.getElementById('appModal').classList.add('hidden');
+            document.getElementById('appModal').classList.remove('flex');
+        };
+
+        // --- STARTUP ---
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeFirebase();
+            resetForm(); // Sets today's date
+        });
+
+    </script>
+</body>
+</html>
