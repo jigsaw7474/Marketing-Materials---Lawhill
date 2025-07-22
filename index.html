@@ -193,52 +193,74 @@
         import { getFirestore, collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // --- CONFIGURATION ---
-        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'material-tracker-app';
-        
+        // IMPORTANT: Replace the placeholder values below with your ACTUAL Firebase project configuration.
+        // You can find this in your Firebase project settings -> "Your apps" -> Web app.
+        // This is crucial for your app to connect to your Firebase database.
+const firebaseConfig = {
+  apiKey: "AIzaSyBM8_6N72RLjxcX_LNd6STciLV_wMzdipQ",
+  authDomain: "marketing-material---lawhill.firebaseapp.com",
+  projectId: "marketing-material---lawhill",
+  storageBucket: "marketing-material---lawhill.firebasestorage.app",
+  messagingSenderId: "97766206314",
+  appId: "1:97766206314:web:82a87988e45e3fa7f15313",
+  measurementId: "G-J0FZT3F7BH"
+};
+        // For Netlify deployment, you can use your Firebase Project ID or a unique string here.
+        // This 'appId' is used for structuring your Firestore collection path (e.g., artifacts/your-app-id/public/data/entries).
+        const appId = "1:97766206314:web:82a87988e45e3fa7f15313"; // <--- REPLACE THIS WITH a unique ID for your Netlify app (e.g., your Firebase Project ID)
+
         let db, auth, userId;
         let allEntries = []; // Local cache of all entries
         let customerTypeChart, materialChart, trendChart;
 
         // --- INITIALIZATION ---
         async function initializeFirebase() {
+            // 1. Try to initialize Firebase App
             try {
                 const app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 auth = getAuth(app);
-                setLogLevel('debug');
-
-                // This listener will trigger once after sign-in is complete.
-                onAuthStateChanged(auth, user => {
-                    if (user) {
-                        userId = user.uid;
-                        console.log("User is signed in with UID:", userId);
-                        updateDbStatus('✅ Connected', 'bg-green-100', 'text-green-800');
-                        loadEntries(); // Load data now that we are authenticated
-                    } else {
-                        console.log("User is not signed in.");
-                        updateDbStatus('⚪ Disconnected', 'bg-gray-100', 'text-gray-800');
-                    }
-                });
-
-                // Attempt to sign in using the appropriate method.
-                const authToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-                if (authToken) {
-                    console.log("Attempting to sign in with custom token...");
-                    await signInWithCustomToken(auth, authToken);
-                } else {
-                    console.log("Attempting to sign in anonymously...");
-                    await signInAnonymously(auth);
-                }
+                setLogLevel('debug'); // Enable debug logging for Firebase
             } catch (error) {
-                console.error("Firebase initialization or sign-in failed:", error);
+                console.error("Firebase initialization failed:", error);
+                updateDbStatus('❌ Init Failed', 'bg-red-100', 'text-red-800');
+                showModal('error', 'Initialization Error', 'Failed to initialize the Firebase application. Please check the console for details.');
+                return;
+            }
+
+            // 2. Set up auth state listener
+            onAuthStateChanged(auth, user => {
+                if (user) {
+                    userId = user.uid;
+                    console.log("User is signed in with UID:", userId);
+                    updateDbStatus('✅ Connected', 'bg-green-100', 'text-green-800');
+                    loadEntries();
+                } else {
+                    console.log("User is not signed in.");
+                    updateDbStatus('⚪ Disconnected', 'bg-gray-100', 'text-gray-800');
+                }
+            });
+
+            // 3. Try to sign in anonymously (as custom tokens are Canvas-specific)
+            try {
+                // __initial_auth_token is a Canvas-specific variable and will not be available on Netlify.
+                // For Netlify, we will sign in anonymously or implement another authentication method.
+                console.log("Attempting to sign in anonymously...");
+                await signInAnonymously(auth);
+            } catch (error) {
+                console.error("Firebase sign-in failed:", error);
                 updateDbStatus('❌ Auth Failed', 'bg-red-100', 'text-red-800');
-                showModal('error', 'Connection Error', 'Could not connect to the database. Please check your connection and refresh the page.');
+                showModal('error', 'Authentication Error', 'Could not sign in to the database. This might be due to a network issue or invalid credentials. Please refresh.');
             }
         }
         
         // --- DATA HANDLING ---
         function loadEntries() {
+            // Ensure db and userId are available before attempting to load entries
+            if (!db || !userId) {
+                console.warn("Firestore or User ID not available. Cannot load entries.");
+                return;
+            }
             const entriesCollection = collection(db, `artifacts/${appId}/public/data/entries`);
             
             onSnapshot(entriesCollection, (snapshot) => {
@@ -302,6 +324,13 @@
         // --- FORM ACTIONS ---
         document.getElementById('materialForm').addEventListener('submit', async function(e) {
             e.preventDefault();
+            
+            // Ensure db is initialized before attempting to save
+            if (!db) {
+                showModal('error', 'Database Not Ready', 'Firebase database is not initialized. Please refresh the page.');
+                return;
+            }
+
             const entryId = document.getElementById('entryId').value;
             
             const entryData = {
@@ -355,6 +384,11 @@
         };
 
         window.handleDelete = (id) => {
+            // Ensure db is initialized before attempting to delete
+            if (!db) {
+                showModal('error', 'Database Not Ready', 'Firebase database is not initialized. Please refresh the page.');
+                return;
+            }
             showModal('confirm', 'Confirm Deletion', 'Are you sure you want to delete this entry? This action cannot be undone.', [
                 { text: 'Cancel', class: 'px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50', action: 'close' },
                 { text: 'Delete', class: 'px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700', action: async () => {
@@ -473,7 +507,10 @@
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
             document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
             document.getElementById(tabName).classList.add('active');
-            event.currentTarget.classList.add('active');
+            // Check if event object exists before accessing currentTarget
+            if (event && event.currentTarget) {
+                event.currentTarget.classList.add('active');
+            }
             if (tabName === 'analytics') {
                 updateAnalytics(allEntries);
             }
@@ -487,7 +524,7 @@
 
         function showModal(type, title, message, buttons = [{ text: 'Close', class: 'px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700', action: 'close' }]) {
             const icons = {
-                success: '✅', error: '❌', confirm: '❓'
+                success: '✅', error: '❌', confirm: '❓', warning: '⚠️' // Added warning icon
             };
             document.getElementById('modal-icon').innerText = icons[type] || '';
             document.getElementById('modal-title').innerText = title;
