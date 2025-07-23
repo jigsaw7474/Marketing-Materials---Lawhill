@@ -193,21 +193,21 @@
         import { getFirestore, collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // --- CONFIGURATION ---
-        // IMPORTANT: Replace the placeholder values below with your ACTUAL Firebase project configuration.
-        // You can find this in your Firebase project settings -> "Your apps" -> Web app.
-        // This is crucial for your app to connect to your Firebase database.
-const firebaseConfig = {
-  apiKey: "AIzaSyBM8_6N72RLjxcX_LNd6STciLV_wMzdipQ",
-  authDomain: "marketing-material---lawhill.firebaseapp.com",
-  projectId: "marketing-material---lawhill",
-  storageBucket: "marketing-material---lawhill.firebasestorage.app",
-  messagingSenderId: "97766206314",
-  appId: "1:97766206314:web:82a87988e45e3fa7f15313",
-  measurementId: "G-J0FZT3F7BH"
-};
-        // For Netlify deployment, you can use your Firebase Project ID or a unique string here.
-        // This 'appId' is used for structuring your Firestore collection path (e.g., artifacts/your-app-id/public/data/entries).
-        const appId = "1:97766206314:web:82a87988e45e3fa7f15313"; // <--- REPLACE THIS WITH a unique ID for your Netlify app (e.g., your Firebase Project ID)
+        // IMPORTANT: The firebaseConfig below has been updated with the correct API Key you provided.
+        // Ensure that Anonymous Authentication is enabled in your Firebase project.
+        const firebaseConfig = {
+            apiKey: "AIzaSyBvM4yC0RRWuOo3al5r8NA-aY_2u5zLI0g", // Updated with your Google Cloud key
+            authDomain: "marketing-material---lawhill.firebaseapp.com",
+            projectId: "marketing-material---lawhill",
+            storageBucket: "marketing-material---lawhill.firebasestorage.app",
+            messagingSenderId: "97766206314",
+            appId: "1:97766206314:web:82a87988e45e3fa7f15313",
+            measurementId: "G-J0FZT3F7BH"
+        };
+
+        // This 'appId' is used for structuring your Firestore collection path.
+        // It has been updated to match the App ID you provided.
+        const appId = "1:97766206314:web:82a87988e45e3fa7f15313"; 
 
         let db, auth, userId;
         let allEntries = []; // Local cache of all entries
